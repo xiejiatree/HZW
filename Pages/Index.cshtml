@@ -1,0 +1,342 @@
+﻿@page
+@model IndexModel
+@{
+    ViewData["Title"] = "Home page";
+}
+@* IndexModel, the testing page *@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>@ViewData["Title"]</title>
+    <script src="https://cdn.jsdelivr.net/npm/hanzi-writer@3.5/dist/hanzi-writer.min.js"></script>
+    <script> const levels = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Levels)); </script>
+    <script> const human = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.HumanBodyRadicals)); </script>
+    <script> const nature = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.NatureEnvironmentRadicals)); </script>
+    <script> const animal = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.AnimalRadicals)); </script>
+    <script> const direction = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.MovementDirectionRadicals)); </script>
+    <script> const misc = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.AbstractMiscRadicals)); </script>
+</head> 
+<body>
+    <div class="layout">
+        <!--Homepage configurations side bar-->
+        <aside class="sidebar">
+            <h1>Configure</h1>
+            <h2>By Proficiency</h2>
+<ul id="proficiency-list">
+    @foreach (var level in Model.Levels)
+    {
+        <li>
+            <button class="set-btn level-btn"
+                    data-set="@level.CharacterSet"
+                    id="@level.Label">
+                @level.Label
+            </button>
+        </li>
+    }
+</ul>
+
+            <h2>By Radical</h2>
+                <h3>Human / Body</h3>
+                    <ul id = "human-radical-list">
+                        @foreach (var human in Model.HumanBodyRadicals)
+                            {
+                                <li>
+                                    <button class="set-btn" data-char="@human.CharacterSet" id = "@human.Label">
+                                        @human.Label
+                                    </button>
+                                </li>
+                            }               
+                    </ul>
+                <h3>Nature  / Environment </h3> 
+                    <ul id = "nature-radical-list">
+                        @foreach (var nature in Model.NatureEnvironmentRadicals)
+                            {
+                                <li>
+                                    <button class="set-btn" data-char="@nature.CharacterSet">
+                                        @nature.Label
+                                    </button>
+                                </li>
+                            }                         
+                    </ul>
+                <h3>Animals</h3>
+                    <ul id = "animal-radical-list">
+                        @foreach (var animal in Model.AnimalRadicals)
+                            {
+                                <li>
+                                    <button class="set-btn" data-char="@animal.CharacterSet">
+                                        @animal.Label
+                                    </button>
+                                </li>
+                            }                         
+                    </ul> 
+                <h3>Movement / Direction</h3>          
+                    <ul id = "movement-radical-list">
+                        @foreach (var direction in Model.MovementDirectionRadicals)
+                            {
+                                <li>
+                                    <button class="set-btn" data-char="@direction.CharacterSet">
+                                        @direction.Label
+                                    </button>
+                                </li>
+                            }                         
+                    </ul> 
+                <h3>Abstract / Miscellaneous</h3> 
+                     <ul id = "abstract-radical-list">
+                        @foreach (var misc in Model.AbstractMiscRadicals)
+                            {
+                                <li>
+                                    <button class="set-btn" data-char="@misc.CharacterSet">
+                                        @misc.Label
+                                    </button>
+                                </li>
+                            }                         
+                    </ul>                                    
+        </aside>
+
+        <!-- Main area to the right of sidebar -->
+        <div class="main-content">
+            <h1 id="writing-test-heading" style="text-align:center;">Writing Test</h1>
+
+            <div class="character-wrapper">
+                <div class="character-box">
+                    <!-- SVG grid background -->
+                    <svg viewBox="0 0 100 100" preserveAspectRatio="none">
+                        <!-- Outer border -->
+                        <rect x="0" y="0" width="100" height="100"
+                            fill="none" stroke="black" stroke-width="1" />
+
+                        <!-- Tianzi grid (田字格) -->
+                        <line x1="50" y1="0"   x2="50" y2="100" stroke="black" stroke-width="0.5" />
+                        <line x1="0"  y1="50"  x2="100" y2="50" stroke="black" stroke-width="0.5" />
+
+                        <!-- Optional rice grid (米字格) diagonals -->
+                        <line x1="0"  y1="0"   x2="100" y2="100" stroke="lightgray" stroke-width="0.5" />
+                        <line x1="0"  y1="100" x2="100" y2="0"   stroke="lightgray" stroke-width="0.5" />
+                    </svg>
+
+                    <!-- HanziWriter target (on top) -->
+                    <div id="character-target-div"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
+
+@using System.Text.Json
+
+<script>
+    // ----- Server-side data: TestedVocab lists -----
+    var rawLevel1 = @Html.Raw(JsonSerializer.Serialize(Model.levelOneWords));
+    var rawLevel2 = @Html.Raw(JsonSerializer.Serialize(Model.levelTwoWords));
+    var rawLevel3 = @Html.Raw(JsonSerializer.Serialize(Model.levelThreeWords));
+    var rawLevel4 = @Html.Raw(JsonSerializer.Serialize(Model.levelFourWords));
+    var rawLevel5 = @Html.Raw(JsonSerializer.Serialize(Model.levelFiveWords));
+    var rawLevel6 = @Html.Raw(JsonSerializer.Serialize(Model.levelSixWords));
+
+    // Map set name -> array of TestedVocab objects
+    var allSetsWords = {
+        "Level 1": rawLevel1,
+        "Level 2": rawLevel2,
+        "Level 3": rawLevel3,
+        "Level 4": rawLevel4,
+        "Level 5": rawLevel5,
+        "Level 6": rawLevel6
+    };
+
+    // Progressive = concatenation of all levels (still as TestedVocab)
+    allSetsWords["Progressive"] = rawLevel1.concat(
+        rawLevel2,
+        rawLevel3,
+        rawLevel4,
+        rawLevel5,
+        rawLevel6
+    );
+
+    // ----- State -----
+    var writer = null;
+
+    var currentSetKey    = "Level 1";                      // "Level 1", "Level 2", ..., "Progressive"
+    var currentSetWords  = allSetsWords[currentSetKey] || [];
+    var currentWordIndex = 0;                              // index into currentSetWords
+    var currentCharIndex = 0;                              // index into TestedVocab.Vocab
+
+    var headingEl = document.getElementById("writing-test-heading");
+
+    // ----- Helpers -----
+
+    // Get the visible label from a button and update "Writing Test: <Label>"
+    function updateHeadingFromButton(btn) {
+        if (!headingEl || !btn) return;
+        var label = btn.textContent || btn.innerText || "";
+        label = label.replace(/^\s+|\s+$/g, "");
+        headingEl.textContent = "Writing Test: " + label;
+    }
+
+    // Safely extract the Vocab string from a TestedVocab object
+    function getVocabString(wordObj) {
+        if (!wordObj) return "";
+        if (typeof wordObj.Vocab === "string") return wordObj.Vocab;
+        if (typeof wordObj.vocab === "string") return wordObj.vocab;
+        return "";
+    }
+
+    // Random next word index, avoiding immediate repeat when possible
+    function getRandomWordIndex(wordCount, excludeIndex) {
+        if (wordCount <= 1) return 0;
+        var idx = excludeIndex;
+        while (idx === excludeIndex) {
+            idx = Math.floor(Math.random() * wordCount);
+        }
+        return idx;
+    }
+
+    // Get info about the current character being drilled
+    function getCurrentCharInfo() {
+        if (!currentSetWords || currentSetWords.length === 0) {
+            return null;
+        }
+
+        var wordObj = currentSetWords[currentWordIndex];
+        var vocab   = getVocabString(wordObj);
+
+        if (!vocab || vocab.length === 0) {
+            return null;
+        }
+
+        if (currentCharIndex < 0 || currentCharIndex >= vocab.length) {
+            currentCharIndex = 0;
+        }
+
+        return {
+            char:  vocab.charAt(currentCharIndex),  // single character
+            vocab: vocab                            // full word
+        };
+    }
+
+    // Move to the next character; only move to a new TestedVocab when all
+    // characters in the current TestedVocab.Vocab have been exhausted.
+    function advanceToNextChar() {
+        if (!currentSetWords || currentSetWords.length === 0) {
+            return;
+        }
+
+        var wordObj = currentSetWords[currentWordIndex];
+        var vocab   = getVocabString(wordObj);
+
+        if (!vocab || vocab.length === 0) {
+            currentCharIndex = 0;
+            currentWordIndex = getRandomWordIndex(currentSetWords.length, currentWordIndex);
+            return;
+        }
+
+        var wordLength = vocab.length;
+
+        // Still more characters in this vocab item → stay in this word
+        if (currentCharIndex < wordLength - 1) {
+            currentCharIndex += 1;
+        } else {
+            // Word exhausted → reset char index and pick a random next word
+            currentCharIndex = 0;
+            currentWordIndex = getRandomWordIndex(currentSetWords.length, currentWordIndex);
+        }
+    }
+
+    // ----- Quiz loop -----
+
+    function startQuizForCurrentChar() {
+        var info = getCurrentCharInfo();
+        if (!info) {
+            console.warn("No character to quiz for set:", currentSetKey);
+            return;
+        }
+
+        var ch = info.char;
+        console.log("Quizzing character:", ch,
+                    "from vocab:", info.vocab,
+                    "in set:", currentSetKey);
+
+        writer.setCharacter(ch);
+
+        if (writer && typeof writer.quiz === "function") {
+            writer.quiz({
+                onComplete: function () {
+                    // When the quiz for this character is finished, move on
+                    advanceToNextChar();
+                    startQuizForCurrentChar();
+                }
+            });
+        }
+    }
+
+    // ----- Initialization -----
+
+    window.addEventListener("load", function () {
+        console.log("Page loaded; initializing HanziWriter quiz.");
+
+        if (!currentSetWords || currentSetWords.length === 0) {
+            console.error("Initial set is empty for", currentSetKey);
+            return;
+        }
+
+        var initialInfo = getCurrentCharInfo();
+        if (!initialInfo) {
+            console.error("Could not determine initial character for", currentSetKey);
+            return;
+        }
+
+        // Create the writer on the first character of the first word
+        writer = HanziWriter.create("character-target-div", initialInfo.char, {
+            width: 350,
+            height: 350,
+            padding: 20,
+            showCharacter: true
+        });
+
+        // Set the heading based on the default set button, if present
+        var defaultBtn = document.querySelector('.level-btn[data-set="' + currentSetKey + '"]');
+        if (defaultBtn) {
+            updateHeadingFromButton(defaultBtn);
+        } else if (headingEl) {
+            headingEl.textContent = "Writing Test: " + currentSetKey;
+        }
+
+        // Start the quiz sequence
+        startQuizForCurrentChar();
+
+        // Hook up only the LEVEL buttons (not radicals)
+        var levelButtons = document.querySelectorAll(".level-btn");
+        Array.prototype.forEach.call(levelButtons, function (btn) {
+            btn.addEventListener("click", function () {
+                var setKey = btn.getAttribute("data-set");
+                console.log("Level button pressed:", setKey);
+
+                if (!setKey || !allSetsWords[setKey]) {
+                    console.warn("No TestedVocab set found for key:", setKey);
+                    return;
+                }
+
+                currentSetKey    = setKey;
+                currentSetWords  = allSetsWords[currentSetKey] || [];
+                currentWordIndex = getRandomWordIndex(currentSetWords.length, currentWordIndex);
+                currentCharIndex = 0;
+
+                if (!currentSetWords || currentSetWords.length === 0) {
+                    console.warn("Selected set is empty:", currentSetKey);
+                    return;
+                }
+
+                if (writer && typeof writer.cancelQuiz === "function") {
+                    writer.cancelQuiz();
+                }
+
+                updateHeadingFromButton(btn);
+                startQuizForCurrentChar();
+            });
+        });
+    });
+</script>
+</body>
+</html>

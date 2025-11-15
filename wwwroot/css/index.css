@@ -1,0 +1,134 @@
+/* <!--Page specific style--> */
+html, body {
+    height: 100%;
+}
+
+body {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.layout {
+    display: flex;
+    flex: 1; 
+}
+
+/* main area grows to fill space between navbar and footer */
+main {
+    flex: 1 0 auto;
+}
+
+.sidebar {
+    width: 18%;
+    background-color: white;
+    border-right: 1px solid rgba(208, 208, 208, 0.33);
+    box-shadow: 2px 0 4px rgba(0, 0, 0, 0.05);
+    box-sizing: border-box;
+    margin-top: 0;
+    padding: 16px 12px;
+    position: relative;      /* needed for the ::after trick below */
+    top: -16px;                  /* undo the -16px you had before */
+}
+
+.sidebar::after {
+    content: "";
+    position: absolute;
+    right: -1px;                                  /* line up with the border */
+    bottom: -30px;                                /* extend 40px below sidebar */
+    width: 1px;
+    height: 40px;
+    background: rgba(208, 208, 208, 0.33);
+}
+
+.sidebar h1 {
+    margin-top: 16px;
+    margin-left: 10px;
+    font-size: 1.5rem;
+    font-weight: bold;
+}
+
+.sidebar h2 {
+margin-left: 20px;
+font-size: 1.2rem;
+font-weight: bold;
+}
+
+.sidebar h3 {
+    margin-left: 30px; /* 10px more than h2 */
+    font-size: 1rem;
+    font-weight: bold;
+}
+
+/* reset default ul margin */
+.sidebar ul {
+    list-style: none;
+    padding: 0;
+    margin-bottom: 10px;
+    margin-left: 0;
+}
+
+/* ul directly under h2 = h2 + 10px */
+.sidebar h2 + ul {
+    margin-left: 30px;
+}
+
+/* ul directly under h3 = h3 + 10px */
+.sidebar h3 + ul {
+    margin-left: 40px;
+}
+
+.main-content {
+    flex: 1; /* take remaining width next to sidebar */
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+.character-wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-top: 20px;
+}
+
+/* NEW: wrapper that holds both the SVG grid and HanziWriter */
+.character-box {
+    position: relative;
+    width: 350px;
+    height: 350px;
+    border: 1px solid rgba(208, 208, 208, 0.33);
+}   
+/* SVG grid in the background */
+.character-box svg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+}
+/* HanziWriter goes on top of the grid */
+#character-target-div {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
+
+.set-btn {
+    font-family: inherit;       
+    font-size: inherit;         
+    color: #0077cc;             
+    background: none;        
+    border: none;              
+    padding: 0;                
+    margin: 0;                 
+    cursor: pointer;            
+    text-align: left;           
+}
+.set-btn:focus,
+.set-btn:active {
+    background-color: #e0e0e0;   /* light grey fill */
+    outline: none;
+}
