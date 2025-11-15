@@ -23,18 +23,18 @@
         <aside class="sidebar">
             <h1>Configure</h1>
             <h2>By Proficiency</h2>
-<ul id="proficiency-list">
-    @foreach (var level in Model.Levels)
-    {
-        <li>
-            <button class="set-btn level-btn"
-                    data-set="@level.CharacterSet"
-                    id="@level.Label">
-                @level.Label
-            </button>
-        </li>
-    }
-</ul>
+        <ul id="proficiency-list">
+            @foreach (var level in Model.Levels)
+            {
+                <li>
+                    <button class="set-btn level-btn"
+                            data-set="@level.CharacterSet"
+                            id="@level.Label">
+                        @level.Label
+                    </button>
+                </li>
+            }
+        </ul>
 
             <h2>By Radical</h2>
                 <h3>Human / Body</h3>
@@ -94,7 +94,23 @@
                     </ul>                                    
         </aside>
 
+
         <!-- Main area to the right of sidebar -->
+        <!-- To the left --> 
+        <div class = "main-content"> 
+            <div class="writer-layout">
+                <div class="timer-column">
+                    <div id="timerDisplay">00:00</div>
+
+                    <div id="timerButtons">
+                        <button onclick="startTimer(60)">1 Minute</button>
+                        <button onclick="startTimer(180)">3 Minutes</button>
+                        <button onclick="startTimer(300)">5 Minutes</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
         <div class="main-content">
             <h1 id="writing-test-heading" style="text-align:center;">Writing Test</h1>
 
@@ -120,21 +136,22 @@
                 </div>
             </div>
         </div>
-    </div>
+</div>
 
 
 
 
-@using System.Text.Json
 
-<script>
-    // ----- Server-side data: TestedVocab lists -----
-    var rawLevel1 = @Html.Raw(JsonSerializer.Serialize(Model.levelOneWords));
-    var rawLevel2 = @Html.Raw(JsonSerializer.Serialize(Model.levelTwoWords));
-    var rawLevel3 = @Html.Raw(JsonSerializer.Serialize(Model.levelThreeWords));
-    var rawLevel4 = @Html.Raw(JsonSerializer.Serialize(Model.levelFourWords));
-    var rawLevel5 = @Html.Raw(JsonSerializer.Serialize(Model.levelFiveWords));
-    var rawLevel6 = @Html.Raw(JsonSerializer.Serialize(Model.levelSixWords));
+    @using System.Text.Json
+
+    <script>
+        // ----- Server-side data: TestedVocab lists -----
+        var rawLevel1 = @Html.Raw(JsonSerializer.Serialize(Model.levelOneWords));
+        var rawLevel2 = @Html.Raw(JsonSerializer.Serialize(Model.levelTwoWords));
+        var rawLevel3 = @Html.Raw(JsonSerializer.Serialize(Model.levelThreeWords));
+        var rawLevel4 = @Html.Raw(JsonSerializer.Serialize(Model.levelFourWords));
+        var rawLevel5 = @Html.Raw(JsonSerializer.Serialize(Model.levelFiveWords));
+        var rawLevel6 = @Html.Raw(JsonSerializer.Serialize(Model.levelSixWords));
 
     // Map set name -> array of TestedVocab objects
     var allSetsWords = {
@@ -303,7 +320,7 @@
             headingEl.textContent = "Writing Test: " + currentSetKey;
         }
 
-        // Start the quiz sequence
+        // Do not start the quiz sequence. Instead, reset the current quiz. 
         startQuizForCurrentChar();
 
         // Hook up only the LEVEL buttons (not radicals)
@@ -317,7 +334,7 @@
                     console.warn("No TestedVocab set found for key:", setKey);
                     return;
                 }
-
+                //Loading up the word set. 
                 currentSetKey    = setKey;
                 currentSetWords  = allSetsWords[currentSetKey] || [];
                 currentWordIndex = getRandomWordIndex(currentSetWords.length, currentWordIndex);
@@ -337,6 +354,48 @@
             });
         });
     });
+
+    //-Timer
+    let timerId = null;
+    let timeRemaining = 0;
+    let quizActive = false;
+
+    function startTimer(seconds) {
+        // Stop old timer if active
+        if (timerId !== null) {
+            clearInterval(timerId);
+        }
+
+        timeRemaining = seconds;
+        quizActive = true;
+        updateTimerDisplay();
+
+        timerId = setInterval(() => {
+            timeRemaining--;
+            updateTimerDisplay();
+
+            if (timeRemaining <= 0) {
+                clearInterval(timerId);
+                timerId = null;
+                quizActive = false;
+                onTimerFinished();
+            }
+        }, 1000);
+    }
+
+    function updateTimerDisplay() {
+        const minutes = Math.floor(timeRemaining / 60).toString().padStart(2, '0');
+        const seconds = (timeRemaining % 60).toString().padStart(2, '0');
+
+        document.getElementById("timerDisplay").textContent = `${minutes}:${seconds}`;
+    }
+
+    function onTimerFinished() {
+        // Disable input / writing test here if needed
+        alert("Time's up!");
+
+        // Trigger score submission, lock UI, etc.
+    }
 </script>
 </body>
 </html>

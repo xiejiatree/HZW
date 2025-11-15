@@ -16,7 +16,7 @@ body {
 
 /* main area grows to fill space between navbar and footer */
 main {
-    flex: 1 0 auto;
+    flex: auto; 
 }
 
 .sidebar {
@@ -116,6 +116,21 @@ font-weight: bold;
     height: 100%;
 }
 
+#timerDisplay {
+    font-size: 2rem;
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+
+#timerButtons button {
+    display: block;
+    width: 100%;
+    margin-bottom: 8px;
+    padding: 8px;
+    font-size: 1rem;
+    cursor: pointer;
+}
+
 .set-btn {
     font-family: inherit;       
     font-size: inherit;         
@@ -131,4 +146,35 @@ font-weight: bold;
 .set-btn:active {
     background-color: #e0e0e0;   /* light grey fill */
     outline: none;
+}
+
+.writer-layout {
+    display: flex;
+    justify-content: center;
+    gap: 30px;
+    margin-top: 20px;
+}
+
+/* Two equal columns */
+.timer-column,
+.writer-column {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+/* Optional: limit width so it doesn't stretch too far */
+.timer-column {
+    max-width: 200px; /* makes timer compact */
+}
+
+.writer-column {
+    max-width: 350px; /* matches character-box size */
+}
+
+#timerDisplay {
+    font-size: 2.2rem;
+    font-weight: bold;
+    margin-bottom: 15px;
 }
