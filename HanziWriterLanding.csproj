@@ -6,4 +6,8 @@
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
 
+  <ItemGroup>
+    <PackageReference Include="Snowflake.Data" Version="5.1.0" />
+  </ItemGroup>
+
 </Project>
