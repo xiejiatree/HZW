@@ -2376,6 +2376,108 @@ public List<TestedVocab> levelFiveWords { get; } = new()
             new() { Vocab = "鷹", Length = 1, Difficulty = 5 },
         };
     #endregion
+    #region "Person"
+    public List<TestedVocab> Person { get; } = new()
+{
+    new() { Vocab = "你", Length = 1 },
+    new() { Vocab = "他", Length = 1 },
+    new() { Vocab = "们", Length = 1 },
+    new() { Vocab = "从", Length = 1 },
+    new() { Vocab = "令", Length = 1 },
+    new() { Vocab = "休", Length = 1 },
+    new() { Vocab = "体", Length = 1 },
+    new() { Vocab = "作", Length = 1 },
+    new() { Vocab = "例", Length = 1 },
+    new() { Vocab = "住", Length = 1 },
+    new() { Vocab = "位", Length = 1 },
+    new() { Vocab = "保", Length = 1 },
+    new() { Vocab = "信", Length = 1 },
+    new() { Vocab = "使", Length = 1 },
+    new() { Vocab = "修", Length = 1 },
+    new() { Vocab = "候", Length = 1 },
+    new() { Vocab = "借", Length = 1 },
+    new() { Vocab = "停", Length = 1 },
+    new() { Vocab = "健", Length = 1 },
+    new() { Vocab = "伙", Length = 1 }
+};
+    #endregion"
+    #region "Women"
+public List<TestedVocab> Women { get; } = new()
+{
+    new() { Vocab = "女", Length = 1 },
+    new() { Vocab = "好", Length = 1 },
+    new() { Vocab = "她", Length = 1 },
+    new() { Vocab = "妈", Length = 1 },
+    new() { Vocab = "姓", Length = 1 },
+    new() { Vocab = "奶", Length = 1 },
+    new() { Vocab = "姐", Length = 1 },
+    new() { Vocab = "妺", Length = 1 },
+    new() { Vocab = "妹", Length = 1 },
+    new() { Vocab = "妇", Length = 1 },
+    new() { Vocab = "妨", Length = 1 },
+    new() { Vocab = "妞", Length = 1 },
+    new() { Vocab = "妥", Length = 1 },
+    new() { Vocab = "婚", Length = 1 },
+    new() { Vocab = "嫁", Length = 1 },
+    new() { Vocab = "妮", Length = 1 },
+    new() { Vocab = "娇", Length = 1 },
+    new() { Vocab = "娘", Length = 1 },
+    new() { Vocab = "娱", Length = 1 },
+    new() { Vocab = "婉", Length = 1 }
+};
+    #endregion
+    #region "Child"
+    public List<TestedVocab> Child { get; } = new()
+{
+    new() { Vocab = "子", Length = 1 },
+    new() { Vocab = "字", Length = 1 },
+    new() { Vocab = "学", Length = 1 },
+    new() { Vocab = "孝", Length = 1 },
+    new() { Vocab = "孙", Length = 1 },
+    new() { Vocab = "孩", Length = 1 },
+    new() { Vocab = "孔", Length = 1 },
+    new() { Vocab = "孟", Length = 1 },
+    new() { Vocab = "孕", Length = 1 },
+    new() { Vocab = "孜", Length = 1 },
+    new() { Vocab = "孚", Length = 1 },
+    new() { Vocab = "孛", Length = 1 },
+    new() { Vocab = "孢", Length = 1 },
+    new() { Vocab = "孥", Length = 1 },
+    new() { Vocab = "孪", Length = 1 },
+    new() { Vocab = "孬", Length = 1 },
+    new() { Vocab = "孰", Length = 1 },
+    new() { Vocab = "孱", Length = 1 },
+    new() { Vocab = "孳", Length = 1 },
+    new() { Vocab = "孵", Length = 1 }
+};
+    #endregion
+    #region "Heart"
+public List<TestedVocab> Heart { get; } = new()
+{
+    new() { Vocab = "心", Length = 1 },
+    new() { Vocab = "忙", Length = 1 },
+    new() { Vocab = "快", Length = 1 },
+    new() { Vocab = "怕", Length = 1 },
+    new() { Vocab = "想", Length = 1 },
+    new() { Vocab = "情", Length = 1 },
+    new() { Vocab = "性", Length = 1 },
+    new() { Vocab = "息", Length = 1 },
+    new() { Vocab = "恨", Length = 1 },
+    new() { Vocab = "恼", Length = 1 },
+    new() { Vocab = "恭", Length = 1 },
+    new() { Vocab = "恩", Length = 1 },
+    new() { Vocab = "息", Length = 1 },
+    new() { Vocab = "悔", Length = 1 },
+    new() { Vocab = "惊", Length = 1 },
+    new() { Vocab = "悦", Length = 1 },
+    new() { Vocab = "慈", Length = 1 },
+    new() { Vocab = "悲", Length = 1 },
+    new() { Vocab = "惠", Length = 1 },
+    new() { Vocab = "懂", Length = 1 }
+};
+
+#endregion
+
 
 #endregion
 

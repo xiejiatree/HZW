@@ -42,7 +42,7 @@
                         @foreach (var human in Model.HumanBodyRadicals)
                             {
                                 <li>
-                                    <button class="set-btn" data-char="@human.CharacterSet" id = "@human.Label">
+                                    <button class="set-btn level-btn" data-set="@human.CharacterSet" id = "@human.Label">
                                         @human.Label
                                     </button>
                                 </li>
@@ -53,7 +53,7 @@
                         @foreach (var nature in Model.NatureEnvironmentRadicals)
                             {
                                 <li>
-                                    <button class="set-btn" data-char="@nature.CharacterSet">
+                                    <button class="set-btn level-btn" data-set="@nature.CharacterSet">
                                         @nature.Label
                                     </button>
                                 </li>
@@ -64,7 +64,7 @@
                         @foreach (var animal in Model.AnimalRadicals)
                             {
                                 <li>
-                                    <button class="set-btn" data-char="@animal.CharacterSet">
+                                    <button class="set-btn level-btn" data-set="@animal.CharacterSet">
                                         @animal.Label
                                     </button>
                                 </li>
@@ -75,7 +75,7 @@
                         @foreach (var direction in Model.MovementDirectionRadicals)
                             {
                                 <li>
-                                    <button class="set-btn" data-char="@direction.CharacterSet">
+                                    <button class="set-btn level-btn" data-set="@direction.CharacterSet">
                                         @direction.Label
                                     </button>
                                 </li>
@@ -86,7 +86,7 @@
                         @foreach (var misc in Model.AbstractMiscRadicals)
                             {
                                 <li>
-                                    <button class="set-btn" data-char="@misc.CharacterSet">
+                                    <button class="set-btn level-btn" data-set="@misc.CharacterSet">
                                         @misc.Label
                                     </button>
                                 </li>
@@ -136,9 +136,7 @@
 
 
 
-
-    @using System.Text.Json
-`@using System.Text.Json
+@using System.Text.Json
 
 <script>
     // ----- Server-side data: TestedVocab lists -----
@@ -149,6 +147,10 @@
     var rawLevel5 = @Html.Raw(JsonSerializer.Serialize(Model.levelFiveWords));
     var rawLevel6 = @Html.Raw(JsonSerializer.Serialize(Model.levelSixWords));
     var Progressive = @Html.Raw(JsonSerializer.Serialize(Model.Progressive));
+    var Person = @Html.Raw(JsonSerializer.Serialize(Model.Person));
+     var Child = @Html.Raw(JsonSerializer.Serialize(Model.Child));
+      var Women = @Html.Raw(JsonSerializer.Serialize(Model.Women));
+       var Heart = @Html.Raw(JsonSerializer.Serialize(Model.Heart));
 
     // Map set name -> array of TestedVocab objects
     var allSetsWords = {
@@ -158,7 +160,11 @@
         "Level 4": rawLevel4,
         "Level 5": rawLevel5,
         "Level 6": rawLevel6,
-        "Progressive": Progressive
+        "Progressive": Progressive,
+        "Person" : Person,
+        "Women" : Women,
+        "Child" : Child,
+        "Heart": Heart,
     };
 
     // Which sets are "progressive" (i.e., use Difficulty bands)?
