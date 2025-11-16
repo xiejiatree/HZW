@@ -113,7 +113,7 @@
         
         <div class="main-content">
             <h1 id="writing-test-heading" style="text-align:center;">Writing Test</h1>
-
+            <div id="example-sentence" style="text-align:center; margin-bottom: 1rem; min-height: 1.5em;"></div>
             <div class="character-wrapper">
                 <div class="character-box">
                     <!-- SVG grid background -->
@@ -144,14 +144,16 @@
 
     @using System.Text.Json
 
-    <script>
-        // ----- Server-side data: TestedVocab lists -----
-        var rawLevel1 = @Html.Raw(JsonSerializer.Serialize(Model.levelOneWords));
-        var rawLevel2 = @Html.Raw(JsonSerializer.Serialize(Model.levelTwoWords));
-        var rawLevel3 = @Html.Raw(JsonSerializer.Serialize(Model.levelThreeWords));
-        var rawLevel4 = @Html.Raw(JsonSerializer.Serialize(Model.levelFourWords));
-        var rawLevel5 = @Html.Raw(JsonSerializer.Serialize(Model.levelFiveWords));
-        var rawLevel6 = @Html.Raw(JsonSerializer.Serialize(Model.levelSixWords));
+    @using System.Text.Json
+
+<script>
+    // ----- Server-side data: TestedVocab lists -----
+    var rawLevel1 = @Html.Raw(JsonSerializer.Serialize(Model.levelOneWords));
+    var rawLevel2 = @Html.Raw(JsonSerializer.Serialize(Model.levelTwoWords));
+    var rawLevel3 = @Html.Raw(JsonSerializer.Serialize(Model.levelThreeWords));
+    var rawLevel4 = @Html.Raw(JsonSerializer.Serialize(Model.levelFourWords));
+    var rawLevel5 = @Html.Raw(JsonSerializer.Serialize(Model.levelFiveWords));
+    var rawLevel6 = @Html.Raw(JsonSerializer.Serialize(Model.levelSixWords));
 
     // Map set name -> array of TestedVocab objects
     var allSetsWords = {
@@ -180,7 +182,9 @@
     var currentWordIndex = 0;                              // index into currentSetWords
     var currentCharIndex = 0;                              // index into TestedVocab.Vocab
 
-    var headingEl = document.getElementById("writing-test-heading");
+    var headingEl   = document.getElementById("writing-test-heading");
+    var sentenceEl  = document.getElementById("example-sentence");
+    var lastVocab   = null;                                // track last word we've seen
 
     // ----- Helpers -----
 
@@ -261,6 +265,32 @@
         }
     }
 
+    // ----- Snowflake: fetch a sentence for a vocab (one call per word) -----
+    async function fetchSentenceForVocab(vocab) {
+        if (!vocab) return;
+
+        console.log("Fetching sentence for vocab:", vocab);
+
+        try {
+            const response = await fetch(`?handler=Sentence&vocab=${encodeURIComponent(vocab)}`);
+            console.log("Sentence response status:", response.status);
+
+            const data = await response.json();
+            console.log("Sentence data:", data);
+
+            if (sentenceEl) {
+                sentenceEl.textContent = data.sentence || "";
+            } else {
+                console.warn("example-sentence element not found");
+            }
+        } catch (err) {
+            console.error("Failed to fetch sentence:", err);
+            if (sentenceEl) {
+                sentenceEl.textContent = "";
+            }
+        }
+    }
+
     // ----- Quiz loop -----
 
     function startQuizForCurrentChar() {
@@ -273,9 +303,18 @@
         var ch = info.char;
         console.log("Quizzing character:", ch,
                     "from vocab:", info.vocab,
-                    "in set:", currentSetKey);
+                    "in set:", currentSetKey,
+                    "currentCharIndex =", currentCharIndex);
 
-        writer.setCharacter(ch);
+        // Call Snowflake once per new TestedVocab (word), not per character
+        if (lastVocab !== info.vocab) {
+            lastVocab = info.vocab;
+            fetchSentenceForVocab(info.vocab);
+        }
+
+        if (writer) {
+            writer.setCharacter(ch);
+        }
 
         if (writer && typeof writer.quiz === "function") {
             writer.quiz({
@@ -320,7 +359,7 @@
             headingEl.textContent = "Writing Test: " + currentSetKey;
         }
 
-        // Do not start the quiz sequence. Instead, reset the current quiz. 
+        // Start quizzing characters (also triggers first sentence fetch)
         startQuizForCurrentChar();
 
         // Hook up only the LEVEL buttons (not radicals)
@@ -334,11 +373,13 @@
                     console.warn("No TestedVocab set found for key:", setKey);
                     return;
                 }
-                //Loading up the word set. 
+
+                // Loading up the word set. 
                 currentSetKey    = setKey;
                 currentSetWords  = allSetsWords[currentSetKey] || [];
                 currentWordIndex = getRandomWordIndex(currentSetWords.length, currentWordIndex);
                 currentCharIndex = 0;
+                lastVocab        = null; // force new sentence
 
                 if (!currentSetWords || currentSetWords.length === 0) {
                     console.warn("Selected set is empty:", currentSetKey);
@@ -355,7 +396,7 @@
         });
     });
 
-    //-Timer
+    // ----- Timer -----
     let timerId = null;
     let timeRemaining = 0;
     let quizActive = false;
@@ -391,9 +432,7 @@
     }
 
     function onTimerFinished() {
-        // Disable input / writing test here if needed
         alert("Time's up!");
-
         // Trigger score submission, lock UI, etc.
     }
 </script>

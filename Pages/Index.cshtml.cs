@@ -2,17 +2,44 @@ using System.Runtime.InteropServices;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Snowflake.Data.Client; 
+using HanziWriterLanding.Services;
+using System.Threading.Tasks;
+
 
 namespace HanziWriterLanding.Pages;
 
 public class IndexModel : PageModel
 {
     private readonly ILogger<IndexModel> _logger;
+     private readonly SnowflakeService _snowflake;
 
-    public IndexModel(ILogger<IndexModel> logger)
+    public IndexModel(ILogger<IndexModel> logger, SnowflakeService snowflake)
     {
         _logger = logger;
+        _snowflake = snowflake; 
     }
+
+    //  [IgnoreAntiforgeryToken]
+    public async Task<IActionResult> OnGetSentenceAsync(string vocab)
+    {
+        if (string.IsNullOrWhiteSpace(vocab))
+        {
+            return new JsonResult(new { sentence = string.Empty });
+        }
+
+        try
+        {
+            // One call per TestedVocab
+            var sentence = await _snowflake.GenerateSentenceAsync(vocab);
+            return new JsonResult(new { sentence });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error generating sentence for vocab {Vocab}", vocab);
+            return new JsonResult(new { sentence = string.Empty });
+        }
+    }
+
     public class SetControl
     {
         public required string Label {get; set;} //"What's visibible on the button
