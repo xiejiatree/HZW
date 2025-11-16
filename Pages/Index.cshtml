@@ -97,23 +97,18 @@
 
         <!-- Main area to the right of sidebar -->
         <!-- To the left --> 
-        <div class = "main-content"> 
-            <div class="writer-layout">
-                <div class="timer-column">
-                    <div id="timerDisplay">00:00</div>
-
-                    <div id="timerButtons">
-                        <button onclick="startTimer(60)">1 Minute</button>
-                        <button onclick="startTimer(180)">3 Minutes</button>
-                        <button onclick="startTimer(300)">5 Minutes</button>
-                    </div>
-                </div>
-            </div>
-        </div>
         
         <div class="main-content">
             <h1 id="writing-test-heading" style="text-align:center;">Writing Test</h1>
             <div id="example-sentence" style="text-align:center; margin-bottom: 1rem; min-height: 1.5em;"></div>
+            <div id="model-buttons-row" style="text-align:center; margin-bottom: 1rem;">
+        <button class="model-btn" data-model="mistral-7b"             style="margin: 0 .25rem;">mistral-7b</button>
+        <button class="model-btn" data-model="mistral-large"          style="margin: 0 .25rem;">mistral-large</button>
+        <button class="model-btn" data-model="mistral-large2"         style="margin: 0 .25rem;">mistral-large2</button>
+        <button class="model-btn" data-model="deepseek-r1"            style="margin: 0 .25rem;">deepseek-r1</button>
+        <button class="model-btn" data-model="openai-gpt-5-chat"      style="margin: 0 .25rem;">openai-gpt-5-chat</button>
+        <button class="model-btn" data-model="snowflake-llama-3.3-70b" style="margin: 0 .25rem;">snowflake-llama-3.3-70b</button>
+        </div>
             <div class="character-wrapper">
                 <div class="character-box">
                     <!-- SVG grid background -->
@@ -143,8 +138,7 @@
 
 
     @using System.Text.Json
-
-    @using System.Text.Json
+`@using System.Text.Json
 
 <script>
     // ----- Server-side data: TestedVocab lists -----
@@ -154,6 +148,7 @@
     var rawLevel4 = @Html.Raw(JsonSerializer.Serialize(Model.levelFourWords));
     var rawLevel5 = @Html.Raw(JsonSerializer.Serialize(Model.levelFiveWords));
     var rawLevel6 = @Html.Raw(JsonSerializer.Serialize(Model.levelSixWords));
+    var Progressive = @Html.Raw(JsonSerializer.Serialize(Model.Progressive));
 
     // Map set name -> array of TestedVocab objects
     var allSetsWords = {
@@ -162,33 +157,44 @@
         "Level 3": rawLevel3,
         "Level 4": rawLevel4,
         "Level 5": rawLevel5,
-        "Level 6": rawLevel6
+        "Level 6": rawLevel6,
+        "Progressive": Progressive
     };
 
-    // Progressive = concatenation of all levels (still as TestedVocab)
-    allSetsWords["Progressive"] = rawLevel1.concat(
-        rawLevel2,
-        rawLevel3,
-        rawLevel4,
-        rawLevel5,
-        rawLevel6
-    );
+    // Which sets are "progressive" (i.e., use Difficulty bands)?
+    // Built from Model.Levels: CharacterSet + Progression flag.
+    var progressionSets = {};
+    if (typeof levels !== "undefined" && Array.isArray(levels)) {
+        levels.forEach(function (lvl) {
+            if (lvl && lvl.CharacterSet) {
+                progressionSets[lvl.CharacterSet] = !!lvl.Progression;
+            }
+        });
+    }
 
-    // ----- State -----
+    // ----- Global state -----
     var writer = null;
 
-    var currentSetKey    = "Level 1";                      // "Level 1", "Level 2", ..., "Progressive"
-    var currentSetWords  = allSetsWords[currentSetKey] || [];
-    var currentWordIndex = 0;                              // index into currentSetWords
-    var currentCharIndex = 0;                              // index into TestedVocab.Vocab
+var currentSetKey    = "Level 1";                      // "Level 1", "Level 2", ..., "Progressive"
+var currentSetWords  = allSetsWords[currentSetKey] || [];
+var currentWordIndex = 0;                              // index into currentSetWords
+var currentCharIndex = 0;                              // index into TestedVocab.Vocab
+var isProgressiveMode = progressionSets[currentSetKey] === true;
+var progressionDifficulty = 1;   
 
-    var headingEl   = document.getElementById("writing-test-heading");
-    var sentenceEl  = document.getElementById("example-sentence");
-    var lastVocab   = null;                                // track last word we've seen
+if (isProgressiveMode) {
+    progressionDifficulty = 1;
+}
+
+    var headingEl  = document.getElementById("writing-test-heading");
+    var sentenceEl = document.getElementById("example-sentence");
+    var currentModelName = "mistral-7b"; // default model
+
+    var lastVocab  = null;                                // track last word we've seen
 
     // ----- Helpers -----
 
-    // Get the visible label from a button and update "Writing Test: <Label>"
+    // Update "Writing Test: <Label>" from the clicked button
     function updateHeadingFromButton(btn) {
         if (!headingEl || !btn) return;
         var label = btn.textContent || btn.innerText || "";
@@ -204,15 +210,53 @@
         return "";
     }
 
-    // Random next word index, avoiding immediate repeat when possible
+    // Random next word index:
+    // - If current set is "Progressive" (Progression == true on server),
+    //   pick from the 100-item band indicated by Difficulty (1–5):
+    //   1 → [0, 99], 2 → [100, 199], ..., 5 → [400, 499]
+    // - Otherwise, uniform random over the whole set.
     function getRandomWordIndex(wordCount, excludeIndex) {
-        if (wordCount <= 1) return 0;
-        var idx = excludeIndex;
-        while (idx === excludeIndex) {
-            idx = Math.floor(Math.random() * wordCount);
+    if (wordCount <= 1) return 0;
+
+    // Progressive mode: use a simple band based on progressionDifficulty (1–5)
+    if (isProgressiveMode && currentSetWords && currentSetWords.length === wordCount) {
+        var diff = progressionDifficulty || 1;
+
+        if (diff < 1) diff = 1;
+        if (diff > 5) diff = 5;
+
+        var bandSize  = 100;
+        var bandStart = (diff - 1) * bandSize;   // 0, 100, 200, 300, 400
+
+        if (bandStart >= wordCount) {
+            // Safety: clamp band start if fewer than 500 items exist
+            bandStart = Math.max(0, wordCount - bandSize);
         }
+
+        var bandEndExclusive = Math.min(bandStart + bandSize, wordCount);
+
+        var idx = excludeIndex;
+        var maxTries = 10;
+
+        // Avoid immediate repeat within that band if possible
+        while (maxTries-- > 0) {
+            idx = bandStart + Math.floor(Math.random() * (bandEndExclusive - bandStart));
+            if (idx !== excludeIndex || (bandEndExclusive - bandStart) <= 1) {
+                break;
+            }
+        }
+
         return idx;
     }
+
+    // Non-progression sets: simple random index, avoiding immediate repeat
+    var idx2 = excludeIndex;
+    while (idx2 === excludeIndex) {
+        idx2 = Math.floor(Math.random() * wordCount);
+    }
+    return idx2;
+}
+
 
     // Get info about the current character being drilled
     function getCurrentCharInfo() {
@@ -237,33 +281,42 @@
         };
     }
 
-    // Move to the next character; only move to a new TestedVocab when all
-    // characters in the current TestedVocab.Vocab have been exhausted.
+    // Move to the next character; only move to a new TestedVocab when the current
+    // word is exhausted.
     function advanceToNextChar() {
-        if (!currentSetWords || currentSetWords.length === 0) {
-            return;
-        }
-
-        var wordObj = currentSetWords[currentWordIndex];
-        var vocab   = getVocabString(wordObj);
-
-        if (!vocab || vocab.length === 0) {
-            currentCharIndex = 0;
-            currentWordIndex = getRandomWordIndex(currentSetWords.length, currentWordIndex);
-            return;
-        }
-
-        var wordLength = vocab.length;
-
-        // Still more characters in this vocab item → stay in this word
-        if (currentCharIndex < wordLength - 1) {
-            currentCharIndex += 1;
-        } else {
-            // Word exhausted → reset char index and pick a random next word
-            currentCharIndex = 0;
-            currentWordIndex = getRandomWordIndex(currentSetWords.length, currentWordIndex);
-        }
+    if (!currentSetWords || currentSetWords.length === 0) {
+        return;
     }
+
+    var wordObj = currentSetWords[currentWordIndex];
+    var vocab   = getVocabString(wordObj);
+
+    if (!vocab || vocab.length === 0) {
+        currentCharIndex = 0;
+        currentWordIndex = getRandomWordIndex(currentSetWords.length, currentWordIndex);
+        return;
+    }
+
+    var wordLength = vocab.length;
+
+    // Still more characters in this vocab item → stay in this word
+    if (currentCharIndex < wordLength - 1) {
+        currentCharIndex += 1;
+    } else {
+        // Word exhausted
+        currentCharIndex = 0;
+
+        // In progressive mode, move up one difficulty band (cap at 5)
+        if (isProgressiveMode) {
+            progressionDifficulty += 1;
+            if (progressionDifficulty > 5) progressionDifficulty = 5;
+        }
+
+        // Then pick next word according to the new band
+        currentWordIndex = getRandomWordIndex(currentSetWords.length, currentWordIndex);
+    }
+}
+
 
     // ----- Snowflake: fetch a sentence for a vocab (one call per word) -----
     async function fetchSentenceForVocab(vocab) {
@@ -271,17 +324,24 @@
 
         console.log("Fetching sentence for vocab:", vocab);
 
-        try {
-            const response = await fetch(`?handler=Sentence&vocab=${encodeURIComponent(vocab)}`);
-            console.log("Sentence response status:", response.status);
+        
+    try {
+        const response = await fetch(
+            `?handler=Sentence` +
+            `&vocab=${encodeURIComponent(vocab)}` +
+            `&modelName=${encodeURIComponent(currentModelName || "")}`
+        );
+        console.log("Sentence response status:", response.status);
 
             const data = await response.json();
-            console.log("Sentence data:", data);
+            console.log("Sentence data received:", data);
 
             if (sentenceEl) {
-                sentenceEl.textContent = data.sentence || "";
-            } else {
-                console.warn("example-sentence element not found");
+                if (data && data.sentence) {
+                    sentenceEl.textContent = data.sentence;
+                } else {
+                    sentenceEl.textContent = "";
+                }
             }
         } catch (err) {
             console.error("Failed to fetch sentence:", err);
@@ -351,6 +411,48 @@
             showCharacter: true
         });
 
+        // ----- Model selection buttons -----
+        var modelButtons = document.querySelectorAll(".model-btn");
+modelButtons.forEach(function (btn) {
+    btn.addEventListener("click", function () {
+        var model = btn.getAttribute("data-model");
+        if (!model) return;
+
+        // 1. Update the current model
+        currentModelName = model;
+        console.log("Switched model to:", currentModelName);
+
+        // 2. Mark active button visually (optional)
+        modelButtons.forEach(function (b) {
+            b.classList.toggle("active-model", b === btn);
+        });
+
+        // 3. Find the current vocab from your existing state
+        var vocab = null;
+
+        if (currentSetWords &&
+            Array.isArray(currentSetWords) &&
+            currentSetWords.length > 0 &&
+            typeof currentWordIndex === "number" &&
+            currentWordIndex >= 0 &&
+            currentWordIndex < currentSetWords.length) {
+
+            var currentWordObj = currentSetWords[currentWordIndex];
+            if (currentWordObj && currentWordObj.Vocab) {
+                vocab = currentWordObj.Vocab;
+            }
+        }
+
+        // 4. If we have a vocab, fetch a new sentence for THIS model
+        if (vocab) {
+            console.log("Fetching new sentence for vocab:", vocab, "with model:", currentModelName);
+            fetchSentenceForVocab(vocab);
+        } else {
+            console.log("No current vocab found, not fetching sentence.");
+        }
+    });
+});
+
         // Set the heading based on the default set button, if present
         var defaultBtn = document.querySelector('.level-btn[data-set="' + currentSetKey + '"]');
         if (defaultBtn) {
@@ -374,12 +476,13 @@
                     return;
                 }
 
-                // Loading up the word set. 
-                currentSetKey    = setKey;
-                currentSetWords  = allSetsWords[currentSetKey] || [];
-                currentWordIndex = getRandomWordIndex(currentSetWords.length, currentWordIndex);
-                currentCharIndex = 0;
-                lastVocab        = null; // force new sentence
+                // Switch to the new set
+                currentSetKey     = setKey;
+                currentSetWords   = allSetsWords[currentSetKey] || [];
+                isProgressiveMode = progressionSets[currentSetKey] === true;
+                currentWordIndex  = getRandomWordIndex(currentSetWords.length, currentWordIndex);
+                currentCharIndex  = 0;
+                lastVocab         = null; // force new sentence
 
                 if (!currentSetWords || currentSetWords.length === 0) {
                     console.warn("Selected set is empty:", currentSetKey);
@@ -395,46 +498,9 @@
             });
         });
     });
-
-    // ----- Timer -----
-    let timerId = null;
-    let timeRemaining = 0;
-    let quizActive = false;
-
-    function startTimer(seconds) {
-        // Stop old timer if active
-        if (timerId !== null) {
-            clearInterval(timerId);
-        }
-
-        timeRemaining = seconds;
-        quizActive = true;
-        updateTimerDisplay();
-
-        timerId = setInterval(() => {
-            timeRemaining--;
-            updateTimerDisplay();
-
-            if (timeRemaining <= 0) {
-                clearInterval(timerId);
-                timerId = null;
-                quizActive = false;
-                onTimerFinished();
-            }
-        }, 1000);
-    }
-
-    function updateTimerDisplay() {
-        const minutes = Math.floor(timeRemaining / 60).toString().padStart(2, '0');
-        const seconds = (timeRemaining % 60).toString().padStart(2, '0');
-
-        document.getElementById("timerDisplay").textContent = `${minutes}:${seconds}`;
-    }
-
-    function onTimerFinished() {
-        alert("Time's up!");
-        // Trigger score submission, lock UI, etc.
-    }
 </script>
+
+
+
 </body>
 </html>

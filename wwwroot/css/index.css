@@ -3,6 +3,39 @@ html, body {
     height: 100%;
 }
 
+.model-btn.active-model {
+    font-weight: bold;
+    text-decoration: underline;
+}
+.model-btn {
+    font-family: inherit;       
+    font-size: inherit;         
+    color: #0077cc;             
+    background: none;        
+    border: none;              
+    padding: 0;                
+    margin: 0;                 
+    cursor: pointer;            
+    text-align: left;           
+}
+
+.complexity-btn {
+    font-family: inherit;       
+    font-size: inherit;         
+    color: #0077cc;             
+    background: none;        
+    border: none;              
+    padding: 0;                
+    margin: 0;                 
+    cursor: pointer;            
+    text-align: left;           
+}
+
+.complexity-btn.active-model {
+    font-weight: bold;
+    text-decoration: underline;
+}
+
 body {
     min-height: 100vh;
     display: flex;

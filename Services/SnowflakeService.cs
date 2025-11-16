@@ -17,12 +17,12 @@ namespace HanziWriterLanding.Services
         /// <summary>
         /// Generate a simple Chinese sentence using the given vocab word.
         /// </summary>
-        public async Task<string> GenerateSentenceAsync(string vocab, CancellationToken cancellationToken = default)
+        public async Task<string> GenerateSentenceAsync(string vocab, string complexity, CancellationToken cancellationToken = default)
         {
             if (string.IsNullOrWhiteSpace(vocab))
                 return string.Empty;
 
-            var prompt = $"Using「{vocab}」create a simple sentence in Chinese. Return only the sentence.";
+            var prompt = $"Using「{vocab}」create a {complexity} sentence in Chinese.";
 
             using var conn = new SnowflakeDbConnection
             {
